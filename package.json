@@ -1,0 +1,33 @@
+{
+  "name": "dsh-inquiry-preset",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "探究模式：把一个概念变成学习者亲手操作的交互式学习任务",
+  "license": "MIT",
+  "main": "index.js",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh",
+    "dsh-preset",
+    "agent-preset",
+    "education",
+    "interactive-learning",
+    "inquiry"
+  ],
+  "engines": {
+    "node": ">=22.6"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+# 依赖与构建产物
+node_modules/
+*.tgz
+output/
+
+# 系统
+.DS_Store
+
+# 内部笔记：**不要**提交竞争分析/策略类文档。
+# 本项目的内部文档统一放在仓库外的同级目录
+# `../interactive-learning-dsh-preset-notes/`，这里再挡一道，防止误加。
+notes/
+internal/
+research/

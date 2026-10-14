@@ -1,0 +1,79 @@
+# 探究模式 preset：把「一个概念」变成「一个能亲手调的任务」
+#
+# 交付形态：声明的 preset 行（不是旧的 .agent-presets 目录——0.2.x 不再读那个目录）。
+# 本 bundle 只声明预设；渲染能力由 profile 里已装的围栏渲染插件提供（dsh-genui 等），
+# 预设不依赖任何特定渲染器，缺了它围栏退回普通代码块，任务照样成立。
+
+- insert:
+    - id: preset-inquiry
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: inquiry
+        name: 探究模式
+        description: 把一个概念变成你亲手操作的任务——先预测，再动手，最后自己说出规律。
+        order: 4
+        plugins:
+          # 人格即纪律。这里放「每轮都必须生效」的三条硬规矩；
+          # 需要情境判断才加载的部分全部放进 inquiry-task 技能。
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              prefix: |-
+                你是 {{model}}，一位把概念变成可操作探究任务的老师。
+
+                你的默认动作不是讲解，而是让学习者先预测、再动手、再看结果。一个概念如果里面有可以调的变量、外面有可以看的后果，就不要用一段话把它讲完——给他一个能亲手改的东西。
+
+                三条不能破的规矩：
+                - 没有预测就没有探究。在给出任何可操作的东西之前，先要一个具体的、可证伪的预测，而且**要他说出来**。
+                - 绝不为了等学习者操作而挂住回合。渲染完就结束回合，他的操作下一轮通过正常输入框回来。
+                - 在他亲眼看到结果之前，任何地方都不许出现这个现象的解释或结论。
+
+                怎么把这三条落成一个具体任务，见 inquiry-task 技能。
+
+          # 技能包：教学法按需加载，不进 standing prompt。
+          #
+          # 路径解析的坑（已实测）：skill-filesystem 对不存在的目录**返回空列表而不报错**，
+          # 所以路径猜错是完全静默的（技能不出现、零日志）。而 `baseUrl` 是【树级】属性
+          # （cordis-plugin-loader 用 entry.parent.tree.ctx.baseUrl），不是 bundle 目录——
+          # 实测：以 profile 为 baseUrl 时按包名解析成功，以 bundle 自身目录为 baseUrl 时
+          # createRequire 找不到包，而相对 URL 写法恰好在后者成立。两种策略互补。
+          #
+          # 因此这里不赌某一种，而是列出候选、按【文件真的存在】挑选：
+          #   1) 官方 creator 预设的按包名解析（走 profile 的 node_modules）
+          #   2) 相对 baseUrl 的 skills/（baseUrl 落在 bundle 目录时的兜底）
+          - id: skill-filesystem
+            name: '@deepseek-ai/dsh-skill-filesystem'
+            config:
+              customSkillDirs:
+                - !!js (() => { const N = process.getBuiltinModule('node:fs'), P = process.getBuiltinModule('node:path'); const c = []; try { c.push(P.join(P.dirname(process.getBuiltinModule('node:module').createRequire(baseUrl).resolve('dsh-inquiry-preset/package.json')), 'skills')) } catch {} try { c.push(process.getBuiltinModule('node:url').fileURLToPath(new URL('skills/', baseUrl))) } catch {} return c.find((d) => N.existsSync(P.join(d, 'inquiry-task', 'SKILL.md'))) ?? c[0] ?? 'skills' })()
+
+          - id: tool-skill
+            name: '@deepseek-ai/dsh-tool-skill'
+
+          # 概念有争议或涉及当前进展时，需要带来源的解释。
+          - id: tool-web
+            name: '@deepseek-ai/dsh-tool-web'
+            config:
+              fetch: false
+              searchTimeoutMs: 60000
+
+          # 探究会话会拖很长，压缩与工具结果裁剪按本预设作用域隔离。
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+              toolResultPruner: true
+            config:
+              - id: compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+
+              - id: command-compact
+                name: '@deepseek-ai/dsh-command-compact'
+
+              - id: tool-result-pruner
+                name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+                config:
+                  thresholdChars: 8192
+                  headChars: 4096
+                  tailChars: 1024
