@@ -22,20 +22,28 @@
 ## 安装
 
 ```bash
-# 从 GitHub 安装（发布后）
-dsh plugin --profile web add github:<你的ID>/dsh-inquiry-preset
-```
-
-本地开发时改为把仓库目录装成 bundle：`plugin_manager install_bundle`，`target` 传本仓库根的绝对路径。
-装完**需要重启 DSH 宿主**，然后在新建会话的模式列表里选「探究模式」。
-
-渲染依赖一个围栏渲染插件（提供 `dsh-ui` 围栏 → 真实组件的渲染）。已实测：
-
-```bash
+# 1) 装围栏渲染器（可选，但强烈建议——没有它就拖不动图）
 dsh plugin --profile web add @changfenhuang/dsh-genui
+
+# 2) 装本插件
+dsh plugin --profile web add github:GrowingPPP/dsh-inquiry-preset
 ```
 
-**它不是硬依赖。** 没有渲染器时围栏退回普通代码块，任务按 SKILL.md 里写好的降级路径继续成立（改问数值、列选项、手工算）。
+把 `web` 换成你实际在用的 profile（桌面端是 `desktop`；不确定就跑 `ls ~/.dsh/profiles`）。
+
+装好后**新建会话**，在模式列表里选 **探究模式**。如果列表里没有它，重启一次 DSH 宿主再看——
+插件行的变动有时要重启才进运行中的实例。
+
+### 关于渲染器
+
+它**不是硬依赖**。没有渲染器时 `dsh-ui` 围栏退回普通代码块，任务按 SKILL.md 里写好的降级路径
+继续成立（改问数值、列选项、手工算）。
+
+但**形态 A（带参数滑块、拖动即时重绘的函数图）是本产品的旗舰做法**，没有渲染器就用不了。
+所以你至少该装一个——任何支持 `dsh-ui` 围栏的渲染插件都行，上面那个是实测过可用的。
+
+**本地开发**：改从仓库目录装 bundle（`plugin_manager install_bundle`，`target` 传本仓库根的绝对路径），
+这样改动能直接反映到会话里；换成 `github:` 安装则固定在某个 commit。
 
 ---
 
@@ -131,6 +139,6 @@ node tools/probe-skill-dir.mjs      # 退出码 0 = 全通过
 frontmatter 合规、persona 变量引用全部已注册、内嵌 spec 语法合法）、端到端（技能被加载并影响模型
 行为、模型先问预测再给图、`dsh-ui` 围栏渲染成带参数滑块的曲线图）三层全部验过。
 
-首次实测未发现功能性问题。披露一个已修复的文案问题：「拧」语域不自然，已全文换成「调」。
+首次真实会话测试未发现功能性问题。
 
 详见 [VERIFICATION.md](VERIFICATION.md)。
