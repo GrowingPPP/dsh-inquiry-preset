@@ -1,4 +1,6 @@
-# 探究模式 · Interactive Inquiry
+# 探究模式 · Inquiry Mode
+
+简体中文 · [English](README.en.md)
 
 一个 DSH 模式预设：把"有变量可调、有结果可看"的概念，变成一个学习者**亲手操作**的任务。
 

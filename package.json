@@ -28,6 +28,7 @@
     "cordis.patch.yml",
     "skills",
     "README.md",
+    "README.en.md",
     "LICENSE"
   ]
 }
