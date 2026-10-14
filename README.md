@@ -116,6 +116,7 @@ skills/inquiry-task/
 
 tools/probe-skill-dir.mjs            技能被发现链路的逐环探针
 VERIFICATION.md                      实测证据
+AGENTS.md                            维护者/AI agent 的工作规范（改这个仓库前先读）
 ```
 
 排查"技能没出现"时先跑探针——这条链路上任何一环断了都是**静默**的（路径错返回空列表、frontmatter 不合规只打一条 warn）：
