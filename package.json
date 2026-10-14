@@ -27,8 +27,10 @@
     "index.js",
     "cordis.patch.yml",
     "skills",
+    "tools",
     "README.md",
     "README.en.md",
+    "VERIFICATION.md",
     "LICENSE"
   ]
 }
