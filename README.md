@@ -81,7 +81,9 @@ dsh plugin --profile web add github:GrowingPPP/dsh-inquiry-preset
   两个版本之间**逐项比对过我们用到的全部配置面**：`agent-preset` 的 Config 字段、
   `persona.prefix`、`skill-filesystem.customSkillDirs`、`tool-web.fetch`、三个压缩包的 Config、
   以及 `!!js` 求值器（`with (ctx) { return eval(expr) }`）——六项全部同形。
-  另外在 `0.2.0-rc.2` 上装了完整一份、确认组装树正确且启动**零告警**。
+
+  在 `0.2.0-rc.2` 上做了**完整一份隔离安装**：组装树正确、启动**零告警**、技能发现探针全通过，
+  并跑了一轮**真实会话**（模型先要一个可证伪的预测并要求说出推理，然后才给带滑块与虚线参照的曲线图）。
 
   注：官方 `latest` 是 `0.2.0-rc.2`，而 `0.2.1-alpha.*` 是**更新的一条 alpha 线**，
   两条线的代码并不相同——上面两个都是实测过的。

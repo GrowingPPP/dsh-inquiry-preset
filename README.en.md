@@ -78,8 +78,13 @@ In other words: **installing it does not open any new execution surface in your 
   Every configuration surface this preset uses was compared item by item across the two versions:
   the `agent-preset` Config fields, `persona.prefix`, `skill-filesystem.customSkillDirs`,
   `tool-web.fetch`, the three compaction packages' Config, and the `!!js` evaluator
-  (`with (ctx) { return eval(expr) }`) — **all six identical**. A full install was also performed on
-  `0.2.0-rc.2`, confirming the composition tree is correct and the host boots with **zero warnings**.
+  (`with (ctx) { return eval(expr) }`) — **all six identical**.
+
+  A **complete isolated install** was also performed on `0.2.0-rc.2`: the composition tree is correct,
+  the host boots with **zero warnings**, the skill-discovery probe passes every scenario, and a
+  **real conversation** was run end to end (the model first asks for a falsifiable prediction and
+  demands the reasoning behind it, and only then hands over the curve plot with a slider and a
+  dashed reference line).
 
   Note: the official `latest` is `0.2.0-rc.2`, while `0.2.1-alpha.*` is a **newer alpha line** —
   the two are not the same codebase, and both were tested.
