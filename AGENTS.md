@@ -107,6 +107,47 @@ gh release create vX.Y.Z --title "..." --notes "..."
 
 ---
 
+## 跨版本兼容性测试（隔离环境，不动用户安装）
+
+改了 `cordis.patch.yml` 里任何 **官方包的配置字段** 之后，必须确认目标 DSH 版本上这些字段还在。
+**隔离做法**（全程不碰全局安装、不碰用户的 profile）：
+
+```bash
+# 1. 在临时目录装目标版本（不要 -g，不要 npm link）
+mkdir -p /tmp/compat-dsh && cd /tmp/compat-dsh && npm init -y && npm i @deepseek-ai/dsh@<版本>
+
+# 2. 用隔离的 DSH_HOME
+export DSH_HOME=/tmp/dsh-compat-home
+BIN=/tmp/compat-dsh/node_modules/@deepseek-ai/dsh/lib/bin.js
+
+# 3. 关键：先让 profile「正常建出来」，再装本插件
+node $BIN --profile web web --host 127.0.0.1 --port 3097 --no-open   # 建 profile（缺参数报错也会建）
+node $BIN plugin --profile web add github:GrowingPPP/dsh-inquiry-preset
+
+# 4. 判据：启动时【一条告警都不该有】
+node $BIN --profile web --host 127.0.0.1 --port 3097 --no-open
+#    有告警 = 有问题，例如：
+#      preset-inquiry (@deepseek-ai/dsh-agent-preset): pending (waiting for service: agentPresets)
+```
+
+**最大的坑：profile 不能只用 `dsh plugin add` 建。** 那样建出来的 profile 只有 `@deepseek-ai/dsh-base`，
+而 **`agentPresets` 服务由 `@deepseek-ai/dsh-web-app` 提供**（`dsh-base` 的 patch 里没有它）。
+于是本预设会停在 `pending`，看起来像兼容性问题，**其实是测试搭台错了**。
+正常走 `dsh web` 建出来的 profile 是 `dsh-base + dsh-web-app`，两个都有。
+
+先比配置面再跑端到端，比直接跑省时间：
+
+```bash
+npm pack @deepseek-ai/dsh-persona@<版本>   # 然后看 lib/types/*.d.ts 里的 Config
+```
+
+本预设用到的全部配置面（改官方包配置时对照这张表）：
+`dsh-agent-preset` 的 Config（id/name/description/order/plugins）、`persona.prefix`、
+`skill-filesystem.customSkillDirs`、`tool-web.fetch`、三个压缩包的 `thresholdChars/headChars/tailChars`、
+以及 `cordis-plugin-loader` 的 `!!js` 求值器。
+
+---
+
 ## 文案口径（别改回去）
 
 **两份 README 必须同步。** `README.md`（中文）是主版本，`README.en.md` 是它的逐节翻译——

@@ -73,9 +73,18 @@ dsh plugin --profile web add github:GrowingPPP/dsh-inquiry-preset
 
 **兼容性**：
 
-- **DSH**：在 `0.2.1-alpha.2` 上实测通过。依赖的都是官方包
+- **DSH**：在 **`0.2.1-alpha.2` 和 `0.2.0-rc.2`（官方 `latest`）两个版本上都实测通过**。
+  依赖的都是官方包
   （`dsh-persona` / `dsh-skill-filesystem` / `dsh-tool-skill` / `dsh-tool-web` / `dsh-compaction-*`），
   不依赖任何社区插件。
+
+  两个版本之间**逐项比对过我们用到的全部配置面**：`agent-preset` 的 Config 字段、
+  `persona.prefix`、`skill-filesystem.customSkillDirs`、`tool-web.fetch`、三个压缩包的 Config、
+  以及 `!!js` 求值器（`with (ctx) { return eval(expr) }`）——六项全部同形。
+  另外在 `0.2.0-rc.2` 上装了完整一份、确认组装树正确且启动**零告警**。
+
+  注：官方 `latest` 是 `0.2.0-rc.2`，而 `0.2.1-alpha.*` 是**更新的一条 alpha 线**，
+  两条线的代码并不相同——上面两个都是实测过的。
 - **平台**：只在 **macOS + Web profile** 上实测过。其他平台未验证（预设本身是声明式的，理论上可移植）。
 - **渲染**：旗舰形态需要一个支持 `dsh-ui` 围栏的渲染插件；没有则降级为纯文字任务。见上一节。
 - **已知限制**：
@@ -83,6 +92,10 @@ dsh plugin --profile web add github:GrowingPPP/dsh-inquiry-preset
   - 图表组件**可能渲染空白**（实测踩到过两次），所以形态 B 强制配数值表兜底
   - `plot` 的表达式语法很窄：自变量只能叫 `x`、乘法必须写 `*`、参数只能单个字母——
     写错时**什么都不画也不报错**
+  - 如果你的 profile 只挂了 `@deepseek-ai/dsh-base`（例如用 `dsh plugin add` 手工建的最小 profile），
+    预设会停在 `pending (waiting for service: agentPresets)`——**`agentPresets` 由
+    `@deepseek-ai/dsh-web-app` 提供**，`dsh-base` 不含它。正常走 `dsh web` 建出来的 profile
+    两个 bundle 都有，不受影响
 
 ---
 

@@ -70,15 +70,29 @@ In other words: **installing it does not open any new execution surface in your 
 
 **Compatibility**:
 
-- **DSH**: tested on `0.2.1-alpha.2`. Every dependency is an official package
+- **DSH**: verified end to end on **both `0.2.1-alpha.2` and `0.2.0-rc.2` (the official `latest`)**.
+  Every dependency is an official package
   (`dsh-persona` / `dsh-skill-filesystem` / `dsh-tool-skill` / `dsh-tool-web` / `dsh-compaction-*`),
   and no community plugin is required.
+
+  Every configuration surface this preset uses was compared item by item across the two versions:
+  the `agent-preset` Config fields, `persona.prefix`, `skill-filesystem.customSkillDirs`,
+  `tool-web.fetch`, the three compaction packages' Config, and the `!!js` evaluator
+  (`with (ctx) { return eval(expr) }`) — **all six identical**. A full install was also performed on
+  `0.2.0-rc.2`, confirming the composition tree is correct and the host boots with **zero warnings**.
+
+  Note: the official `latest` is `0.2.0-rc.2`, while `0.2.1-alpha.*` is a **newer alpha line** —
+  the two are not the same codebase, and both were tested.
 - **Platform**: only tested on **macOS + the Web profile**. Other platforms are unverified (the preset itself is declarative, so it should be portable in principle).
 - **Rendering**: the flagship shape needs a renderer implementing `dsh-ui` fences; without one it degrades to a text-only task. See the previous section.
 - **Known limitations**:
   - The preset's display name and the skill text are Chinese
   - Chart components **may render blank** (hit twice in testing), which is why Shape B always ships a numeric table as a fallback
   - `plot`'s expression grammar is narrow: the independent variable must be `x`, multiplication must be written with `*`, and parameters must be single letters — **write it wrong and nothing is drawn, with no error**
+  - If your profile mounts only `@deepseek-ai/dsh-base` (for example a minimal profile hand-built with
+    `dsh plugin add`), the preset stays at `pending (waiting for service: agentPresets)` — that service is
+    provided by **`@deepseek-ai/dsh-web-app`**, which `dsh-base` does not include. A profile created the
+    normal way by `dsh web` has both bundles and is unaffected
 
 ---
 

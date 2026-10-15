@@ -1,4 +1,4 @@
-# 验证记录：探究模式 preset 在 DSH 0.2.1-alpha.2 上的装配
+# 验证记录：探究模式 preset 的装配
 
 - 日期：2026-10-14
 - DSH 版本：0.2.1-alpha.2
@@ -194,6 +194,84 @@ file://<profile>/node_modules/@local/dsh-inquiry-preset/cordis.patch.yml -> <bun
 > 1. 新建会话 → 模式列表里有没有「探究模式」
 > 2. 技能目录里有没有 `inquiry-task`（没有就先跑 `node tools/probe-skill-dir.mjs`）
 > 3. 说「我想搞懂阻尼振动」→ 它应当**先问一个可证伪的预测**，再给带滑块的图
+
+## 跨版本兼容性：官方 `latest`（`0.2.0-rc.2`）实测（2026-10-15）
+
+**背景**：本文件其余部分全部是在 `0.2.1-alpha.2` 上验的。但 npm 上 `@deepseek-ai/dsh` 的
+`latest` 标签指向 **`0.2.0-rc.2`**，而 `0.2.1-alpha.*` 是**更靠后的另一条 alpha 线**——
+两条线代码不同。用官方版的人拿到的是一个**更旧**的代码库，所以必须单独验。
+
+这不是假想的风险：本项目的调研阶段就发现过一个同类插件因为
+`0.1.x → 0.2.x` 之间的格式变更（`.agent-presets` 目录被废弃、`persona.text` 改名 `prefix`）而完全跑不起来。
+
+### 结论：通过
+
+在**隔离环境**中完成（临时目录装 0.2.0-rc.2、`DSH_HOME` 指向 `/tmp`，全程未触碰全局安装与用户的 profile）。
+
+### 证据 1：用到的配置面逐项比对，六项全部同形
+
+从 npm 拉 `0.2.0-rc.2` 的对应包，直接读类型定义与 Config schema：
+
+| 配置面 | 0.2.0-rc.2 的结果 |
+| --- | --- |
+| `dsh-agent-preset` 的 Config | `{id: required, name, description, order, plugins: required}` —— **逐字相同** |
+| `dsh-persona.prefix` | 仍是 `prefix: string`（必填），未回退成 `text` |
+| `dsh-skill-filesystem.customSkillDirs` | `customSkillDirs?: string[]` 仍在 |
+| `dsh-tool-web` | `fetch?: boolean`、`searchTimeoutMs?: number` 均在 |
+| 三个压缩包 | `dsh-compaction-basic` / `dsh-command-compact` / `dsh-compaction-tool-result-pruner` 在 `0.2.0-rc.2` 均存在，Config 含 `thresholdChars` / `headChars` / `tailChars` |
+| `cordis-plugin-loader` 的 `!!js` 求值器 | `new Function("ctx","expr", \`with (ctx) { return eval(expr) }\`)` —— **完全一致**，本仓库那段候选链表达式依赖的 `with(ctx)` 与裸 `baseUrl` 行为不变 |
+
+### 证据 2：装进去、启动、零告警
+
+```bash
+export DSH_HOME=/tmp/dsh-compat-home2
+BIN=/tmp/compat-dsh/node_modules/@deepseek-ai/dsh/lib/bin.js
+node $BIN --profile web web --host 127.0.0.1 --port 3097 --no-open   # 建 profile
+node $BIN plugin --profile web add github:GrowingPPP/dsh-inquiry-preset
+node $BIN --profile web --host 127.0.0.1 --port 3097 --no-open
+# → dsh web: http://127.0.0.1:3097/?token=...      （一条告警都没有）
+```
+
+- bundle 自动注册：`@deepseek-ai/dsh-base, @deepseek-ai/dsh-web-app, dsh-inquiry-preset`
+- `--dump-config` 退出码 0，`# == dsh-inquiry-preset` → `preset-inquiry` 行在位，
+  `config.id: inquiry` / `name: 探究模式` 正确
+- **`did not activate` 计数 = 0**
+
+对照：boot 时的告警就是激活失败的信号。本次排查中确实见过它报警的样子（见下）。
+
+### 证据 3：技能发现探针在 0.2.0-rc.2 的 loader 上全通过
+
+```bash
+DSH_HOME=/tmp/dsh-compat-home DSH_PROFILE=compat \
+NODE_PATH=/tmp/compat-dsh/node_modules node <installed>/tools/probe-skill-dir.mjs
+# → 全部通过，退出码 0（四种 baseUrl 场景全部解析到技能目录）
+```
+
+### 排查中遇到的一个假警报（值得记下来）
+
+第一次测出来是**失败**的：
+
+```
+dsh: warning: 1 entry did not activate
+preset-inquiry (@deepseek-ai/dsh-agent-preset): pending (waiting for service: agentPresets)
+```
+
+一度看起来就是兼容性问题。追下去发现是**测试搭台错了**：
+我用 `dsh plugin add` 建的 profile 走的是**最小模板**，`bundles` 里只有 `@deepseek-ai/dsh-base`，
+而 **`agentPresets` 服务由 `@deepseek-ai/dsh-web-app` 提供**（`dsh-base` 的 `cordis.patch.yml`
+里不含 `dsh-agent-preset-registry`，`dsh-web-app` 的含 2 处）。
+正常走 `dsh web` 建出来的 profile 是 `dsh-base + dsh-web-app` 两个都有，因此不受影响。
+
+**教训**：验证"能不能激活"之前，先确认 profile 是用**正常路径**建的。否则会把搭台错误
+当成产品缺陷，然后去改本来没坏的东西。
+
+### 未验证的部分
+
+- 端到端教学循环（模型先问预测、再渲染滑块图）**只在 `0.2.1-alpha.2` 上跑过**。
+  在 `0.2.0-rc.2` 上验的是装配层与技能发现层，没有在那一版上跑过完整会话。
+- 其他平台（非 macOS）未验证。
+
+---
 
 ## 复现命令
 
