@@ -26,6 +26,7 @@
 | 给 `package.json` 加 `exports` | **技能静默消失** | `ERR_PACKAGE_PATH_NOT_EXPORTED`，只在挂载时 |
 | 删掉 `index.js` | 市场预检拒收 | 装前预检报"缺入口文件" |
 | `plot` 没给 `yMax` | 峰值被切在框外 | **无任何报错** |
+| `plot` 表达式写错（自变量用了 `t`、隐式乘法 `gt`） | 曲线整族不画 | **无任何报错**，`validate_dsh_ui` 照样回 `valid` |
 | `series` 用了 `name` 而非 `label` | 图可能不渲染 | **无任何报错** |
 | 改了 `cordis.patch.yml` 没重启 | 旧行为照旧 | 无报错，看起来像"改动无效" |
 
