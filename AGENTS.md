@@ -75,6 +75,10 @@ dsh inquiry-test --host 127.0.0.1 --port 3099 --no-open
 - **截图给公开用途前，必须先收起侧边栏**（`button[aria-label="收起侧边栏"]`）。
   侧边栏里有用户的其他**工作区名和会话标题**，拍进去就是把别人的项目列表公开了。
   收完后用 `document.body.innerText` 断言那些名字都不在，再截
+- **换了 README 里的图片，必须同时改文件名。** GitHub 把 README 图片经
+  `camo.githubusercontent.com` 按 **URL** 缓存——文件内容变了但路径没变时，
+  页面会继续显示旧图（本地和 `raw.githubusercontent.com` 都是新的，只有渲染出来的那张是旧的）。
+  `git mv docs/demo.png docs/demo-2.png` 这样换个名字，URL 变了缓存才会失效
 - 验证完记得 `job_kill` 实例、确认 3099 释放，**不要影响用户正在用的 3080**
 
 ---
