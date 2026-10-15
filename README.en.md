@@ -1,8 +1,15 @@
 # Inquiry Mode
 
+[简体中文](README.md) · English
+
 An agent preset for DSH: turn a concept that has **a variable you can adjust and an outcome you can watch** into a task the learner **operates by hand**.
 
-[简体中文](README.md) · English
+![Inquiry Mode in a real session: two falsifiable predictions first, then a slider-driven curve, then read the numbers yourself](docs/demo.png)
+
+The screenshot is one complete turn from a real session: the model asks for **two falsifiable predictions in plain prose**
+("before you touch anything you have to commit to a guess — and say it out loud, guessing silently doesn't count"),
+and only after the learner answers does it hand over the slider-driven live curve — exactly one thing on the chart is movable.
+The table below the chart is not decoration: it is the fallback for when the chart fails to render.
 
 **The unit is a single interactive task, not a course.** No curriculum tree, no progress tracking, no question bank. It is the mode you switch into when you want to get your hands on one specific concept.
 
@@ -44,6 +51,34 @@ It is **not a hard dependency**. Without a renderer, `dsh-ui` fences fall back t
 But **Shape A — a function plot with parameter sliders that redraws as you drag — is this product's flagship move**, and it is unavailable without a renderer. So install at least one; any renderer that implements `dsh-ui` fences will do, and the one above is the one this project was tested against.
 
 **Local development**: install the bundle from the repository directory instead (`plugin_manager install_bundle`, with `target` set to the absolute path of this repo root) so your edits reach sessions directly. A `github:` install pins you to one commit.
+
+---
+
+## Permissions and compatibility
+
+**What this preset mounts, and what it does not** (all checkable in `cordis.patch.yml`):
+
+| | Contents |
+| --- | --- |
+| Tools registered | `skill` (loads skills on demand), `web_search` (web search) |
+| **Not registered** | any shell, file read/write, subagent, or automation tool |
+| **Also not registered** | `web_fetch` (configured with `fetch: false` — search only, no page fetching) |
+
+In other words: **installing it does not open any new execution surface in your session.** It changes *teaching behaviour*, not *what the agent can do* — the tool surface inside this preset is **narrower** than the standard preset's.
+
+**External services**: only `web_search` reaches out, and it goes to whatever search service you have configured. Nothing else contacts any external endpoint. Unless you deliberately switch to another mode, it will not touch your files or run commands.
+
+**Compatibility**:
+
+- **DSH**: tested on `0.2.1-alpha.2`. Every dependency is an official package
+  (`dsh-persona` / `dsh-skill-filesystem` / `dsh-tool-skill` / `dsh-tool-web` / `dsh-compaction-*`),
+  and no community plugin is required.
+- **Platform**: only tested on **macOS + the Web profile**. Other platforms are unverified (the preset itself is declarative, so it should be portable in principle).
+- **Rendering**: the flagship shape needs a renderer implementing `dsh-ui` fences; without one it degrades to a text-only task. See the previous section.
+- **Known limitations**:
+  - The preset's display name and the skill text are Chinese
+  - Chart components **may render blank** (hit twice in testing), which is why Shape B always ships a numeric table as a fallback
+  - `plot`'s expression grammar is narrow: the independent variable must be `x`, multiplication must be written with `*`, and parameters must be single letters — **write it wrong and nothing is drawn, with no error**
 
 ---
 
@@ -113,7 +148,9 @@ skills/inquiry-task/
     └── anti-patterns.md             8 anti-patterns
 
 tools/probe-skill-dir.mjs            per-link probe for skill discovery
+docs/demo.png                        the screenshot above
 VERIFICATION.md                      verification evidence
+AGENTS.md                            maintenance conventions for humans/AI agents (read before changing this repo)
 ```
 
 When diagnosing "the skill does not show up", run the probe first — every link in that chain fails **silently** (a wrong path returns an empty list; malformed frontmatter only logs a warning):

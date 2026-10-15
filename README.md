@@ -152,6 +152,7 @@ skills/inquiry-task/
     └── anti-patterns.md             8 个反模式
 
 tools/probe-skill-dir.mjs            技能被发现链路的逐环探针
+docs/demo.png                        上面那张截图
 VERIFICATION.md                      实测证据
 AGENTS.md                            维护者/AI agent 的工作规范（改这个仓库前先读）
 ```
